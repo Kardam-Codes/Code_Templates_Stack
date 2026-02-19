@@ -1,28 +1,27 @@
 /**
  * FILE: app.js
- * OWNER: Kardam
+ * BRANCH: odoo-ready
  *
  * PURPOSE:
- * Create and configure Express application.
- *
- * WHY THIS EXISTS:
- * - Separate app setup from server start
- * - Easier testing
- * - Cleaner structure
+ * Configure Express application.
  *
  * IMPORTANT:
- * - Do NOT start server here
- * - Only configure app
+ * - No server startup here
+ * - Only middleware and routes
  */
 
 import express from "express"
 import cors from "cors"
 import morgan from "morgan"
 
-import { APP_CONFIG } from "../config/app.config.js"
+import { ENV } from "../config/env.js"
 
-// Future route imports (others will build these)
+// Routes
 import healthRoutes from "../routes/health.routes.js"
+import authRoutes from "../routes/auth.routes.js"
+
+// Middleware
+import { errorMiddleware } from "../middleware/error.middleware.js"
 
 const app = express()
 
@@ -37,7 +36,7 @@ app.use(cors())
 app.use(express.json())
 
 // Log requests in development mode
-if (APP_CONFIG.debug.logRequests) {
+if (ENV.NODE_ENV === "development") {
   app.use(morgan("dev"))
 }
 
@@ -45,13 +44,16 @@ if (APP_CONFIG.debug.logRequests) {
  * ROUTES
  */
 
-// Health check route
+// Health check
 app.use("/api/health", healthRoutes)
+
+// Auth routes
+app.use("/api/auth", authRoutes)
 
 /**
  * GLOBAL ERROR HANDLER
- * (Misha will build error.middleware.js later)
+ * Must be LAST middleware
  */
-// app.use(errorMiddleware) ← will plug later
+app.use(errorMiddleware)
 
 export default app

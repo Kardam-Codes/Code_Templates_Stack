@@ -1,23 +1,75 @@
 /**
  * FILE: error.middleware.js
- * OWNER: Misha
+ * BRANCH: odoo-ready
  *
  * PURPOSE:
- * Global error handler.
+ * Global error handler with PostgreSQL awareness.
  *
- * WHY:
- * - Prevent server crash
- * - Standardize error output
+ * FEATURES:
+ * - Handles custom errors
+ * - Handles PostgreSQL errors
+ * - Prevents internal error leaks
+ * - Returns proper HTTP status codes
  */
 
 export function errorMiddleware(err, req, res, next) {
-  console.error("🔥 Global Error:", err)
+  console.error("🔥 Error:", err)
 
-  const statusCode = err.statusCode || 500
-  const message = err.message || "Internal Server Error"
+  /**
+   * Custom application error support
+   */
+  if (err.statusCode) {
+    return res.status(err.statusCode).json({
+      success: false,
+      message: err.message,
+    })
+  }
 
-  res.status(statusCode).json({
+  /**
+   * PostgreSQL Error Handling
+   * Reference: https://www.postgresql.org/docs/current/errcodes-appendix.html
+   */
+
+  // Unique constraint violation
+  if (err.code === "23505") {
+    return res.status(409).json({
+      success: false,
+      message: "Duplicate value violates unique constraint",
+    })
+  }
+
+  // Foreign key violation
+  if (err.code === "23503") {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid reference to related record",
+    })
+  }
+
+  // Not-null violation
+  if (err.code === "23502") {
+    return res.status(400).json({
+      success: false,
+      message: "Missing required field",
+    })
+  }
+
+  // Invalid text representation (e.g., bad UUID)
+  if (err.code === "22P02") {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid input format",
+    })
+  }
+
+  /**
+   * Default fallback
+   */
+  return res.status(500).json({
     success: false,
-    message,
+    message:
+      process.env.NODE_ENV === "development"
+        ? err.message
+        : "Internal Server Error",
   })
 }

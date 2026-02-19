@@ -1,110 +1,119 @@
 /**
  * FILE: db.js
- * OWNER: Kardam
+ * BRANCH: odoo-ready
  *
  * PURPOSE:
- * Initialize and manage database connection.
+ * Central PostgreSQL database layer.
  *
- * WHY THIS EXISTS:
- * - Centralize DB connection logic
- * - Prevent connection code in services
- * - Make database switch easy in future
+ * RESPONSIBILITIES:
+ * - Create shared connection pool
+ * - Provide query execution wrapper
+ * - Provide transaction helper
+ * - Handle graceful shutdown
  *
  * IMPORTANT RULES:
- * - No business logic here
- * - No model logic here
- * - Only connection management
+ * - No SQL business logic here
+ * - No schema definitions here
+ * - Only execution layer
  */
 
+import pkg from "pg"
 import { ENV } from "../config/env.js"
 
-/**
- * This object will hold our database connection.
- * For now, we use a simple in-memory fallback.
- *
- * In future, this can be replaced with:
- * - MongoDB
- * - PostgreSQL
- * - Prisma
- * - Sequelize
- */
-let databaseInstance = null
+const { Pool } = pkg
 
 /**
- * Connect to database
+ * Create PostgreSQL connection pool.
+ * Pool manages multiple connections efficiently.
+ */
+const pool = new Pool({
+  host: ENV.DB_HOST,
+  port: ENV.DB_PORT,
+  user: ENV.DB_USER,
+  password: ENV.DB_PASSWORD,
+  database: ENV.DB_NAME,
+  ssl: ENV.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+  max: 10, // maximum number of connections in pool
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+})
+
+/**
+ * Test database connection on startup.
  */
 export async function connectDatabase() {
   try {
-    if (!ENV.DATABASE_URL) {
-      console.log("⚡ No DATABASE_URL provided.")
-      console.log("⚡ Using in-memory database (template mode).")
+    const client = await pool.connect()
+    await client.query("SELECT 1") // simple test query
+    client.release()
 
-      databaseInstance = {
-        type: "memory",
-        data: {}, // simple key-value store
-      }
-
-      return databaseInstance
-    }
-
-    /**
-     * Example: If real database URL exists
-     * Here you would initialize real DB connection
-     */
-    console.log("🔌 Connecting to real database...")
-
-    // Placeholder logic for real DB
-    databaseInstance = {
-      type: "external",
-      url: ENV.DATABASE_URL,
-    }
-
-    console.log("✅ Database connected.")
-
-    return databaseInstance
-
+    console.log("✅ PostgreSQL connected successfully.")
   } catch (error) {
-    console.error("❌ Database connection failed:", error.message)
+    console.error("❌ PostgreSQL connection failed:", error.message)
     process.exit(1)
   }
 }
 
 /**
- * Get current database instance
- * Ensures DB is initialized before use
+ * Generic query execution wrapper.
+ *
+ * @param {string} text - SQL query
+ * @param {Array} params - Query parameters
+ * @returns {Promise<QueryResult>}
  */
-export function getDatabase() {
-  if (!databaseInstance) {
-    throw new Error("Database not initialized. Call connectDatabase() first.")
+export async function query(text, params = []) {
+  try {
+    const result = await pool.query(text, params)
+    return result
+  } catch (error) {
+    console.error("❌ Database Query Error:", error.message)
+    throw error
   }
-
-  return databaseInstance
 }
+
 /**
- * FILE: db.js
- * OWNER: Jay (Usage Layer)
+ * Transaction helper.
  *
- * PURPOSE:
- * Provide simple in-memory CRUD storage.
+ * Ensures:
+ * - BEGIN
+ * - COMMIT on success
+ * - ROLLBACK on failure
  *
- * NOTE:
- * This assumes connection is already initialized.
+ * @param {Function} callback - receives client
  */
+export async function withTransaction(callback) {
+  const client = await pool.connect()
 
-let database = {
-  users: [],
-  admins: [],
-}
+  try {
+    await client.query("BEGIN")
 
-let idCounter = 1
+    const result = await callback(client)
 
-export function getCollection(name) {
-  if (!database[name]) {
-    database[name] = []
+    await client.query("COMMIT")
+    return result
+  } catch (error) {
+    await client.query("ROLLBACK")
+    console.error("❌ Transaction rolled back:", error.message)
+    throw error
+  } finally {
+    client.release()
   }
-  return database[name]
 }
 
-export function generateId() {
-  return idCounter++
+/**
+ * Graceful shutdown handler.
+ * Ensures pool closes properly.
+ */
+export async function closeDatabase() {
+  try {
+    await pool.end()
+    console.log("🔌 PostgreSQL pool closed.")
+  } catch (error) {
+    console.error("Error closing database pool:", error.message)
+  }
 }
+
+/**
+ * Optional: expose pool for advanced use (rarely needed)
+ */
+export { pool }

@@ -1,72 +1,103 @@
 /**
- * FILE: user.service.js
- * OWNER: Jay
+ * FILE: user.controller.js
+ * BRANCH: odoo-ready
  *
  * PURPOSE:
- * Business logic for users.
+ * HTTP layer for user management.
  */
 
-import { getCollection, generateId } from "../database/db.js"
+import { UserService } from "../services/user.service.js"
 
-const collection = () => getCollection("users")
+export const UserController = {
+  /**
+   * GET /users
+   */
+  async getAll(req, res, next) {
+    try {
+      const { page, limit } = req.query
 
-export const UserService = {
-  create(data) {
-    const newUser = {
-      id: generateId(),
-      name: data.name,
-      email: data.email,
-      role: "user",
+      const result = await UserService.getAll({ page, limit })
+
+      return res.status(200).json({
+        success: true,
+        data: result.data,
+        pagination: result.pagination,
+      })
+    } catch (error) {
+      next(error)
     }
-
-    collection().push(newUser)
-    return newUser
   },
 
-  getAll(query) {
-    let users = [...collection()]
+  /**
+   * GET /users/:id
+   */
+  async getById(req, res, next) {
+    try {
+      const { id } = req.params
 
-    // Filtering
-    if (query.search) {
-      users = users.filter(
-        (u) =>
-          u.name.toLowerCase().includes(query.search.toLowerCase()) ||
-          u.email.toLowerCase().includes(query.search.toLowerCase())
-      )
+      const user = await UserService.getById(id)
+
+      return res.status(200).json({
+        success: true,
+        data: user,
+      })
+    } catch (error) {
+      next(error)
     }
-
-    const total = users.length
-
-    // Pagination
-    const page = parseInt(query.page) || 1
-    const limit = parseInt(query.limit) || 10
-    const start = (page - 1) * limit
-    const end = start + limit
-
-    const paginated = users.slice(start, end)
-
-    return { data: paginated, total, page, limit }
   },
 
-  getById(id) {
-    return collection().find((u) => u.id === Number(id))
+  /**
+   * PUT /users/:id
+   */
+  async update(req, res, next) {
+    try {
+      const { id } = req.params
+
+      const updatedUser = await UserService.updateUser(id, req.body)
+
+      return res.status(200).json({
+        success: true,
+        message: "User updated successfully",
+        data: updatedUser,
+      })
+    } catch (error) {
+      next(error)
+    }
   },
 
-  update(id, data) {
-    const users = collection()
-    const index = users.findIndex((u) => u.id === Number(id))
-    if (index === -1) return null
+  /**
+   * PATCH /users/:id/deactivate
+   */
+  async deactivate(req, res, next) {
+    try {
+      const { id } = req.params
 
-    users[index] = { ...users[index], ...data }
-    return users[index]
+      const result = await UserService.deactivateUser(id)
+
+      return res.status(200).json({
+        success: true,
+        message: result.message,
+      })
+    } catch (error) {
+      next(error)
+    }
   },
 
-  delete(id) {
-    const users = collection()
-    const index = users.findIndex((u) => u.id === Number(id))
-    if (index === -1) return false
+  /**
+   * DELETE /users/:id
+   */
+  async delete(req, res, next) {
+    try {
+      const { id } = req.params
 
-    users.splice(index, 1)
-    return true
+      const result = await UserService.deleteUser(id)
+
+      return res.status(200).json({
+        success: true,
+        message: result.message,
+      })
+    } catch (error) {
+      next(error)
+    }
   },
 }
