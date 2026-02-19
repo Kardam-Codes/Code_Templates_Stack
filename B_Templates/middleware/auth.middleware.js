@@ -12,10 +12,12 @@
  */
 
 import jwt from "jsonwebtoken"
-import { APP_CONFIG } from "../config/app.config.js"
+import { ENV } from "../config/env.js"
+import { query } from "../database/db.js"
+import { UserModel } from "../models/user.model.js"
 import { Response } from "../utils/response.js"
 
-export function authMiddleware(req, res, next) {
+export async function authMiddleware(req, res, next) {
   try {
     const authHeader = req.headers.authorization
 
@@ -25,9 +27,19 @@ export function authMiddleware(req, res, next) {
 
     const token = authHeader.split(" ")[1]
 
-    const decoded = jwt.verify(token, APP_CONFIG.security.jwtSecret)
+    const decoded = jwt.verify(token, ENV.JWT_SECRET)
 
-    req.user = decoded
+    if (!decoded?.id) {
+      return Response.error(res, "Unauthorized: Invalid token payload", 401)
+    }
+
+    const rolesResult = await query(UserModel.getUserRoles, [decoded.id])
+    const roles = rolesResult.rows.map((role) => role.name)
+
+    req.user = {
+      ...decoded,
+      roles,
+    }
 
     next()
   } catch (error) {

@@ -9,6 +9,7 @@
 import { query, withTransaction } from "../database/db.js"
 import { UserModel } from "../models/user.model.js"
 import { AuditModel } from "../models/audit.model.js"
+import bcrypt from "bcrypt"
 
 import {
   validateUUID,
@@ -17,7 +18,44 @@ import {
   validateLength,
 } from "../utils/validator.js"
 
+const SALT_ROUNDS = 10
+
 export const UserService = {
+  async createUser(data) {
+    const name = sanitizeString(data.name)
+    const email = sanitizeString(data.email)
+
+    if (!name || !email) {
+      const error = new Error("name and email are required")
+      error.statusCode = 400
+      throw error
+    }
+
+    validateLength(name, 2, 150, "Name")
+    validateEmail(email)
+
+    const password = data.password || "TempPass123!"
+    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS)
+
+    return await withTransaction(async (client) => {
+      const createdUserResult = await client.query(UserModel.createUser, [
+        name,
+        email,
+        passwordHash,
+      ])
+
+      const createdUser = createdUserResult.rows[0]
+
+      await client.query(AuditModel.createLog, [
+        createdUser.id,
+        "USER_CREATED",
+        JSON.stringify({ email }),
+      ])
+
+      return createdUser
+    })
+  },
+
   async getById(id) {
     validateUUID(id)
 

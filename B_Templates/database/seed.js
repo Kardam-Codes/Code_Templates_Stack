@@ -1,58 +1,122 @@
 /**
  * FILE: seed.js
- * OWNER: Misha
+ * BRANCH: odoo-ready
  *
  * PURPOSE:
- * Seed initial demo data for hackathon use.
- *
- * WHY:
- * - Prevent empty dashboard during demo
- * - Ensure app feels alive immediately
+ * Seed PostgreSQL demo data safely and idempotently.
  */
 
-import { getCollection, generateId } from "./db.js"
+import bcrypt from "bcrypt"
+import { fileURLToPath } from "url"
+import { query, closeDatabase } from "./db.js"
 
-export function seedDatabase() {
-  const users = getCollection("users")
-  const admins = getCollection("admins")
-  const audits = getCollection("audits")
+const SALT_ROUNDS = 10
 
-  // Prevent duplicate seeding
-  if (users.length > 0 || admins.length > 0) {
-    console.log("🌱 Seed already exists. Skipping seeding.")
-    return
-  }
-
-  // Seed Users
-  users.push(
-    {
-      id: generateId(),
-      name: "John Doe",
-      email: "john@example.com",
-      role: "user",
-    },
-    {
-      id: generateId(),
-      name: "Jane Smith",
-      email: "jane@example.com",
-      role: "user",
-    }
+async function ensureRole(name) {
+  await query(
+    `
+      INSERT INTO roles (name)
+      VALUES ($1)
+      ON CONFLICT (name) DO NOTHING;
+    `,
+    [name]
   )
 
-  // Seed Admin
-  admins.push({
-    id: generateId(),
+  const result = await query(`SELECT id FROM roles WHERE name = $1;`, [name])
+  return result.rows[0].id
+}
+
+async function ensureUser({ name, email, passwordHash }) {
+  const existing = await query(
+    `
+      SELECT id, name, email, is_active, created_at, updated_at
+      FROM users
+      WHERE email = $1;
+    `,
+    [email]
+  )
+
+  if (existing.rows.length > 0) {
+    return { user: existing.rows[0], created: false }
+  }
+
+  const created = await query(
+    `
+      INSERT INTO users (name, email, password_hash)
+      VALUES ($1, $2, $3)
+      RETURNING id, name, email, is_active, created_at, updated_at;
+    `,
+    [name, email, passwordHash]
+  )
+
+  return { user: created.rows[0], created: true }
+}
+
+async function ensureUserRole(userId, roleId) {
+  await query(
+    `
+      INSERT INTO user_roles (user_id, role_id)
+      VALUES ($1, $2)
+      ON CONFLICT (user_id, role_id) DO NOTHING;
+    `,
+    [userId, roleId]
+  )
+}
+
+async function createAuditLog(userId, action, metadata) {
+  await query(
+    `
+      INSERT INTO audit_logs (user_id, action, metadata)
+      VALUES ($1, $2, $3);
+    `,
+    [userId, action, JSON.stringify(metadata)]
+  )
+}
+
+export async function seedDatabase() {
+  const userRoleId = await ensureRole("user")
+  const adminRoleId = await ensureRole("admin")
+
+  const demoPasswordHash = await bcrypt.hash("Password123", SALT_ROUNDS)
+
+  const adminResult = await ensureUser({
     name: "Admin User",
     email: "admin@example.com",
-    role: "admin",
+    passwordHash: demoPasswordHash,
   })
+  await ensureUserRole(adminResult.user.id, adminRoleId)
 
-  // Seed Audit logs
-  audits.push({
-    id: generateId(),
-    action: "Database seeded",
-    timestamp: new Date().toISOString(),
+  const userResult = await ensureUser({
+    name: "Demo User",
+    email: "user@example.com",
+    passwordHash: demoPasswordHash,
   })
+  await ensureUserRole(userResult.user.id, userRoleId)
 
-  console.log("🌱 Database seeded successfully.")
+  if (adminResult.created) {
+    await createAuditLog(adminResult.user.id, "SEED_ADMIN_CREATED", {
+      email: adminResult.user.email,
+    })
+  }
+
+  if (userResult.created) {
+    await createAuditLog(userResult.user.id, "SEED_USER_CREATED", {
+      email: userResult.user.email,
+    })
+  }
+
+  console.log("Seed complete. Roles and demo users are ready.")
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  seedDatabase()
+    .then(async () => {
+      await closeDatabase()
+      process.exit(0)
+    })
+    .catch(async (error) => {
+      console.error("Seed failed:", error.message)
+      await closeDatabase()
+      process.exit(1)
+    })
 }

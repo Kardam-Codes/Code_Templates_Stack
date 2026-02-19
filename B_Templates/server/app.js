@@ -19,6 +19,7 @@ import { ENV } from "../config/env.js"
 // Routes
 import healthRoutes from "../routes/health.routes.js"
 import authRoutes from "../routes/auth.routes.js"
+import userRoutes from "../routes/user.routes.js"
 
 // Middleware
 import { errorMiddleware } from "../middleware/error.middleware.js"
@@ -49,6 +50,9 @@ app.use("/api/health", healthRoutes)
 
 // Auth routes
 app.use("/api/auth", authRoutes)
+
+// User routes
+app.use("/api/users", userRoutes)
 
 /**
  * GLOBAL ERROR HANDLER

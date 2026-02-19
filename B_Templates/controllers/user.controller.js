@@ -10,6 +10,23 @@ import { UserService } from "../services/user.service.js"
 
 export const UserController = {
   /**
+   * POST /users
+   */
+  async create(req, res, next) {
+    try {
+      const createdUser = await UserService.createUser(req.body)
+
+      return res.status(201).json({
+        success: true,
+        message: "User created successfully",
+        data: createdUser,
+      })
+    } catch (error) {
+      next(error)
+    }
+  },
+
+  /**
    * GET /users
    */
   async getAll(req, res, next) {

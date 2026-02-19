@@ -1,55 +1,30 @@
 /**
- * FILE: user.routes.js
+ * FILE: role.middleware.js
  * BRANCH: odoo-ready
  *
  * PURPOSE:
- * User management routes.
+ * Restrict access by role.
  */
 
-import express from "express"
-import { UserController } from "../controllers/user.controller.js"
-import { authMiddleware } from "../middleware/auth.middleware.js"
-import { roleMiddleware } from "../middleware/role.middleware.js"
+import { Response } from "../utils/response.js"
 
-const router = express.Router()
+export function roleMiddleware(allowedRoles = []) {
+  return (req, res, next) => {
+    if (!req.user) {
+      return Response.error(res, "Unauthorized: User context missing", 401)
+    }
 
-/**
- * All routes require authentication
- */
-router.use(authMiddleware)
+    if (!Array.isArray(allowedRoles) || allowedRoles.length === 0) {
+      return next()
+    }
 
-/**
- * GET /users
- * Admin only
- */
-router.get("/", roleMiddleware(["admin"]), UserController.getAll)
+    const userRoles = Array.isArray(req.user.roles) ? req.user.roles : []
+    const hasRequiredRole = allowedRoles.some((role) => userRoles.includes(role))
 
-/**
- * GET /users/:id
- * Admin or same user
- */
-router.get("/:id", UserController.getById)
+    if (!hasRequiredRole) {
+      return Response.error(res, "Forbidden: Insufficient role", 403)
+    }
 
-/**
- * UPDATE user
- * Admin only
- */
-router.put("/:id", roleMiddleware(["admin"]), UserController.update)
-
-/**
- * Deactivate user
- * Admin only
- */
-router.patch(
-  "/:id/deactivate",
-  roleMiddleware(["admin"]),
-  UserController.deactivate
-)
-
-/**
- * Delete user
- * Admin only
- */
-router.delete("/:id", roleMiddleware(["admin"]), UserController.delete)
-
-export default router
+    return next()
+  }
+}

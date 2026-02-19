@@ -22,6 +22,8 @@ router.use(authMiddleware)
  * GET /users
  * Admin only
  */
+router.post("/", roleMiddleware(["admin"]), UserController.create)
+
 router.get("/", roleMiddleware(["admin"]), UserController.getAll)
 
 /**
