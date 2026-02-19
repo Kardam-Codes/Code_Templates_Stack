@@ -1,21 +1,31 @@
 /**
- * FILE.tsx
- * OWNER
+ * FILE: EmptyState.jsx
+ * OWNER: Jay
  *
  * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
+ * Show a friendly message when no data exists.
  *
- * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
- *
- * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
- * - Optimize prematurely
- *
- * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * WHY:
+ * - Avoid blank screens
+ * - Improve UX clarity
  */
+
+import React from "react"
+
+function EmptyState({ message = "No data available." }) {
+  return (
+    <div style={styles.container}>
+      <p>{message}</p>
+    </div>
+  )
+}
+
+const styles = {
+  container: {
+    padding: "20px",
+    textAlign: "center",
+    color: "#777",
+  },
+}
+
+export default EmptyState

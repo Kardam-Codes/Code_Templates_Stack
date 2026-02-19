@@ -1,21 +1,28 @@
 /**
- * FILE.ts
- * OWNER
+ * FILE: env.js
+ * OWNER: Kardam
  *
  * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
+ * Load and centralize environment variables.
  *
- * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
+ * WHY THIS EXISTS:
+ * - Avoid using process.env everywhere
+ * - Keep env access predictable
+ * - Make configuration clean
  *
- * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
- * - Optimize prematurely
- *
- * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * IMPORTANT:
+ * - Only read environment variables here
+ * - Do NOT put logic here
  */
+
+import dotenv from "dotenv"
+
+// Load variables from .env file
+dotenv.config()
+
+export const ENV = {
+  NODE_ENV: process.env.NODE_ENV || "development",
+  PORT: process.env.PORT || 5000,
+  DATABASE_URL: process.env.DATABASE_URL || "",
+  JWT_SECRET: process.env.JWT_SECRET || "default_secret",
+}

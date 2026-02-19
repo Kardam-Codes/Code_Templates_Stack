@@ -1,21 +1,26 @@
 /**
- * FILE.middleware.ts
- * OWNER
+ * FILE: role.middleware.js
+ * OWNER: Misha
  *
  * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
+ * Restrict access based on user role.
  *
- * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
- *
- * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
- * - Optimize prematurely
- *
- * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * USAGE:
+ * router.get("/admin", authMiddleware, roleMiddleware("admin"), controller)
  */
+
+import { Response } from "../utils/response.js"
+
+export function roleMiddleware(requiredRole) {
+  return function (req, res, next) {
+    if (!req.user) {
+      return Response.error(res, "Unauthorized", 401)
+    }
+
+    if (req.user.role !== requiredRole) {
+      return Response.error(res, "Forbidden: Insufficient role", 403)
+    }
+
+    next()
+  }
+}

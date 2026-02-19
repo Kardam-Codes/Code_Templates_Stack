@@ -1,21 +1,39 @@
 /**
- * FILE.model.ts
- * OWNER
+ * FILE: audit.model.js
+ * OWNER: Misha
  *
  * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
+ * Store system activity logs.
  *
- * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
- *
- * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
- * - Optimize prematurely
- *
- * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * WHY:
+ * - Track important actions
+ * - Improve debugging
+ * - Show professionalism in hackathon demos
  */
+
+import { getCollection, generateId } from "../database/db.js"
+
+const collection = () => getCollection("audits")
+
+export const AuditModel = {
+  log(action, metadata = {}) {
+    const entry = {
+      id: generateId(),
+      action,
+      metadata,
+      timestamp: new Date().toISOString(),
+    }
+
+    collection().push(entry)
+    return entry
+  },
+
+  getAll() {
+    return collection()
+  },
+
+  clear() {
+    const audits = collection()
+    audits.length = 0
+  },
+}

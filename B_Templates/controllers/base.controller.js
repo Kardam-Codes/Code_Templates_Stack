@@ -1,21 +1,23 @@
 /**
- * FILE.controller.ts
- * OWNER
+ * FILE: featureFlags.js
+ * OWNER: Kardam
  *
  * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
+ * Centralized backend feature flags.
  *
- * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
+ * WHY THIS EXISTS:
+ * - Enable/disable features without deleting code
+ * - Keep flags separate from main config
+ * - Make backend behavior flexible during hackathons
  *
- * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
- * - Optimize prematurely
- *
- * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * RULES:
+ * - No logic here
+ * - Only boolean flags
  */
+
+export const FEATURE_FLAGS = {
+  AUTH_ENABLED: true,
+  ADMIN_ENABLED: false,
+  LOGGING_ENABLED: true,
+  SEED_ON_START: false,
+}

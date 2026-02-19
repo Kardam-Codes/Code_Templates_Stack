@@ -1,21 +1,22 @@
 /**
- * FILE.ts
- * OWNER
+ * FILE: featureFlags.js
+ * OWNER: Misha
  *
  * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
+ * Control frontend feature visibility.
  *
- * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
+ * WHY:
+ * - Enable/disable features without deleting code
+ * - Adjust UI quickly during hackathons
  *
- * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
- * - Optimize prematurely
- *
- * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * NOTE:
+ * Backend feature flags are separate.
  */
+
+export const FEATURE_FLAGS = {
+  ENABLE_AUTH: true,
+  ENABLE_ADMIN_PANEL: true,
+  ENABLE_ANALYTICS: false,
+  ENABLE_REALTIME: false,
+  ENABLE_THEME_SWITCH: true,
+}

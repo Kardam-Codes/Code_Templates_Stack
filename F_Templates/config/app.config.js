@@ -1,21 +1,57 @@
 /**
- * FILE.config.ts
- * OWNER
+ * FILE: app.config.js
+ * OWNER: Kardam
  *
  * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
+ * Central configuration file for frontend behavior.
  *
- * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
+ * WHY THIS EXISTS:
+ * - Change app behavior without editing components
+ * - Control demo vs live mode
+ * - Enable/disable features
+ * - Control theme selection
  *
- * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
- * - Optimize prematurely
- *
- * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * IMPORTANT RULES:
+ * - No functions here
+ * - No business logic here
+ * - Only configuration values
  */
+
+export const APP_CONFIG = {
+  /**
+   * Basic App Info
+   */
+  appName: "Hackathon Framework",
+  version: "1.0.0",
+
+  /**
+   * Mode:
+   * - "demo" → mock data
+   * - "live" → real backend
+   */
+  mode: "demo",
+
+  /**
+   * Feature Flags
+   * Toggle features without deleting code
+   */
+  features: {
+    auth: true,
+    admin: false,
+    analytics: false,
+    realtime: false,
+  },
+
+  /**
+   * Default theme
+   * Misha's theme system will use this
+   */
+  theme: "light", // "light" | "dark" | "brand"
+
+  /**
+   * Debug settings
+   */
+  debug: {
+    logApiCalls: true,
+  },
+}

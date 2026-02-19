@@ -1,21 +1,15 @@
 /**
- * FILE.routes.ts
- * OWNER
- *
- * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
- *
- * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
- *
- * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
- * - Optimize prematurely
- *
- * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * FILE: admin.routes.js
+ * OWNER: Jay
  */
+
+import express from "express"
+import { AdminController } from "../controllers/admin.controller.js"
+
+const router = express.Router()
+
+router.post("/", AdminController.create)
+router.get("/", AdminController.getAll)
+router.delete("/:id", AdminController.delete)
+
+export default router

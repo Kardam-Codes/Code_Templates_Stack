@@ -1,21 +1,37 @@
 /**
- * FILE.ts
- * OWNER
+ * FILE: useToggle.js
+ * OWNER: Misha
  *
  * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
+ * Simplify boolean state toggling.
  *
- * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
- *
- * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
- * - Optimize prematurely
- *
- * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * USE CASES:
+ * - Modal open/close
+ * - Dropdown toggle
+ * - Theme switch
  */
+
+import { useState } from "react"
+
+export function useToggle(initialValue = false) {
+  const [value, setValue] = useState(initialValue)
+
+  function toggle() {
+    setValue((prev) => !prev)
+  }
+
+  function setTrue() {
+    setValue(true)
+  }
+
+  function setFalse() {
+    setValue(false)
+  }
+
+  return {
+    value,
+    toggle,
+    setTrue,
+    setFalse,
+  }
+}

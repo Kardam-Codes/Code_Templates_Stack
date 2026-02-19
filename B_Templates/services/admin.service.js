@@ -1,21 +1,33 @@
 /**
- * FILE.service.ts
- * OWNER
- *
- * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
- *
- * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
- *
- * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
- * - Optimize prematurely
- *
- * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * FILE: admin.service.js
+ * OWNER: Jay
  */
+
+import { getCollection, generateId } from "../database/db.js"
+
+const collection = () => getCollection("admins")
+
+export const AdminService = {
+  create(data) {
+    const admin = {
+      id: generateId(),
+      role: "admin",
+      ...data,
+    }
+
+    collection().push(admin)
+    return admin
+  },
+
+  getAll() {
+    return collection()
+  },
+
+  delete(id) {
+    const admins = collection()
+    const index = admins.findIndex((a) => a.id === Number(id))
+    if (index === -1) return false
+    admins.splice(index, 1)
+    return true
+  },
+}

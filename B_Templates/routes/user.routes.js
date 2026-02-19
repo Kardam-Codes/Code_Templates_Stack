@@ -1,21 +1,20 @@
 /**
- * FILE.routes.ts
- * OWNER
+ * FILE: user.routes.js
+ * OWNER: Jay
  *
  * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
- *
- * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
- *
- * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
- * - Optimize prematurely
- *
- * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * Define user API endpoints.
  */
+
+import express from "express"
+import { UserController } from "../controllers/user.controller.js"
+
+const router = express.Router()
+
+router.post("/", UserController.create)
+router.get("/", UserController.getAll)
+router.get("/:id", UserController.getById)
+router.put("/:id", UserController.update)
+router.delete("/:id", UserController.delete)
+
+export default router

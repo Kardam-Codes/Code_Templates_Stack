@@ -1,21 +1,24 @@
 /**
- * FILE.middleware.ts
- * OWNER
+ * FILE: logger.middleware.js
+ * OWNER: Misha
  *
  * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
+ * Log incoming requests.
  *
- * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
- *
- * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
- * - Optimize prematurely
- *
- * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * WHY:
+ * - Debug during hackathon
+ * - Understand traffic flow
  */
+
+export function loggerMiddleware(req, res, next) {
+  const start = Date.now()
+
+  res.on("finish", () => {
+    const duration = Date.now() - start
+    console.log(
+      `${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`
+    )
+  })
+
+  next()
+}

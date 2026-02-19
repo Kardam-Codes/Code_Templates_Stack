@@ -1,21 +1,20 @@
 /**
- * FILE.ts
- * OWNER
+ * FILE: asyncHandler.js
+ * OWNER: Kardam
  *
  * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
+ * Wrap async route handlers to avoid try/catch repetition.
  *
- * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
+ * WHY THIS EXISTS:
+ * - Prevent repetitive try/catch blocks
+ * - Automatically pass errors to Express error middleware
  *
- * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
- * - Optimize prematurely
- *
- * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * USAGE:
+ * router.get("/", asyncHandler(controllerFunction))
  */
+
+export const asyncHandler = (fn) => {
+  return (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next)
+  }
+}

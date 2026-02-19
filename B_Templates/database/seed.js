@@ -1,21 +1,58 @@
 /**
- * FILE.ts
- * OWNER
+ * FILE: seed.js
+ * OWNER: Misha
  *
  * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
+ * Seed initial demo data for hackathon use.
  *
- * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
- *
- * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
- * - Optimize prematurely
- *
- * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * WHY:
+ * - Prevent empty dashboard during demo
+ * - Ensure app feels alive immediately
  */
+
+import { getCollection, generateId } from "./db.js"
+
+export function seedDatabase() {
+  const users = getCollection("users")
+  const admins = getCollection("admins")
+  const audits = getCollection("audits")
+
+  // Prevent duplicate seeding
+  if (users.length > 0 || admins.length > 0) {
+    console.log("🌱 Seed already exists. Skipping seeding.")
+    return
+  }
+
+  // Seed Users
+  users.push(
+    {
+      id: generateId(),
+      name: "John Doe",
+      email: "john@example.com",
+      role: "user",
+    },
+    {
+      id: generateId(),
+      name: "Jane Smith",
+      email: "jane@example.com",
+      role: "user",
+    }
+  )
+
+  // Seed Admin
+  admins.push({
+    id: generateId(),
+    name: "Admin User",
+    email: "admin@example.com",
+    role: "admin",
+  })
+
+  // Seed Audit logs
+  audits.push({
+    id: generateId(),
+    action: "Database seeded",
+    timestamp: new Date().toISOString(),
+  })
+
+  console.log("🌱 Database seeded successfully.")
+}

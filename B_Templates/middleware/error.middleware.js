@@ -1,21 +1,23 @@
 /**
- * FILE.middleware.ts
- * OWNER
+ * FILE: error.middleware.js
+ * OWNER: Misha
  *
  * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
+ * Global error handler.
  *
- * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
- *
- * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
- * - Optimize prematurely
- *
- * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * WHY:
+ * - Prevent server crash
+ * - Standardize error output
  */
+
+export function errorMiddleware(err, req, res, next) {
+  console.error("🔥 Global Error:", err)
+
+  const statusCode = err.statusCode || 500
+  const message = err.message || "Internal Server Error"
+
+  res.status(statusCode).json({
+    success: false,
+    message,
+  })
+}

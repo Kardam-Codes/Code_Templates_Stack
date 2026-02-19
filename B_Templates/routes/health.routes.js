@@ -1,21 +1,27 @@
 /**
- * FILE.routes.ts
- * OWNER
+ * FILE: health.routes.js
+ * OWNER: Misha
  *
  * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
+ * Provide system health status.
  *
- * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
- *
- * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
- * - Optimize prematurely
- *
- * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * WHY:
+ * - Check if backend is alive
+ * - Use for deployment verification
+ * - Professional touch in hackathons
  */
+
+import express from "express"
+
+const router = express.Router()
+
+router.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    status: "OK",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  })
+})
+
+export default router
