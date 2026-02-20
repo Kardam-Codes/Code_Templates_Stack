@@ -1,21 +1,46 @@
 /**
- * FILE.routes.ts
- * OWNER
+ * auth.routes.js
+ * YUG
  *
  * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
+ * - Handle authentication routes (signup, login, protected endpoints)
+ * - Manage role-based access control
  *
  * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
+ * - Keep routes simple and focused
+ * - Use middleware for auth validation
  * - Make it reusable across projects
  *
  * DO NOT:
- * - Add business-specific logic
- * - Over-engineer
+ * - Add business logic in routes
+ * - Over-engineer responses
  * - Optimize prematurely
  *
  * NOTES:
- * - This file can be extended or deleted later
+ * - Extend with additional routes as needed
  * - Clarity > Cleverness
  */
+const express = require("express");
+const router = express.Router();
+
+const { signup, login } = require("../controller/authController");
+const { protect, authorizeRoles } = require("../middleware/authMiddleware");
+
+router.post("/register", signup);
+router.post("/login", login);
+
+router.get("/protected", protect, (req, res) => {
+  res.json({
+    message: "Protected route accessed",
+    user: req.user
+  });
+});
+
+router.get("/admin", protect, authorizeRoles("admin"), (req, res) => {
+  res.json({
+    message: "Welcome Admin",
+    user: req.user
+  });
+});
+
+module.exports = router;

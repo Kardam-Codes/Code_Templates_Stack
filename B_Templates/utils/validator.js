@@ -1,21 +1,34 @@
 /**
- * FILE.ts
- * OWNER
+ * validator.js
+ * Validation Utilities
  *
  * PURPOSE:
- * - Reusable TEMPLATE for hackathons & fast builds
+ * - Reusable validation helpers for authentication
  *
  * YOU SHOULD:
- * - Implement the simplest working version
- * - Keep defaults predictable
- * - Make it reusable across projects
+ * - Keep validation rules simple and predictable
+ * - Reuse across projects
  *
  * DO NOT:
- * - Add business-specific logic
+ * - Add complex business logic
  * - Over-engineer
- * - Optimize prematurely
  *
  * NOTES:
- * - This file can be extended or deleted later
- * - Clarity > Cleverness
+ * - Extend validators as needed
+ * - Clarity over complexity
  */
+*
+  SIMPLE VALIDATION HELPERS
+*/
+
+exports.validateLoginInput = (email, password) => {
+  if (!email || !password) {
+    throw new Error("Email and password required");
+  }
+};
+
+exports.validateSignupInput = (name, email, password) => {
+  if (!name || !email || !password) {
+    throw new Error("All fields required");
+  }
+};
