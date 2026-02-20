@@ -1,7 +1,3 @@
-Love this move.
-A separate `SAMPLE_USAGE.md` makes this feel like a real engineering toolkit.
-
-We’ll use a **very familiar demo project** so anyone can understand instantly:
 
 # 📚 “Task Manager App” (To-Do App for Teams)
 
@@ -448,10 +444,3 @@ It handles the rest.
 
 ---
 
-If you want, next I can build:
-
-* A **second sample** (Inventory Management)
-* Or a **Hackathon Execution Guide using this template**
-* Or a **Presentation Script based on this demo**
-
-Just say the word.
