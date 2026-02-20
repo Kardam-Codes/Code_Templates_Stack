@@ -1,23 +1,25 @@
 /**
- * FILE: featureFlags.js
- * OWNER: Kardam
+ * FILE: base.controller.js
+ * BRANCH: odoo-ready
  *
  * PURPOSE:
- * Centralized backend feature flags.
- *
- * WHY THIS EXISTS:
- * - Enable/disable features without deleting code
- * - Keep flags separate from main config
- * - Make backend behavior flexible during hackathons
- *
- * RULES:
- * - No logic here
- * - Only boolean flags
+ * Minimal controller helpers shared across controllers when needed.
  */
 
-export const FEATURE_FLAGS = {
-  AUTH_ENABLED: true,
-  ADMIN_ENABLED: false,
-  LOGGING_ENABLED: true,
-  SEED_ON_START: false,
+export class BaseController {
+  static ok(res, data = null, message = "Success") {
+    return res.status(200).json({
+      success: true,
+      message,
+      data,
+    })
+  }
+
+  static created(res, data = null, message = "Created") {
+    return res.status(201).json({
+      success: true,
+      message,
+      data,
+    })
+  }
 }
