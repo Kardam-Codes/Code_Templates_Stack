@@ -29,7 +29,7 @@ export const APP_CONFIG = {
    * - "demo" → mock data
    * - "live" → real backend
    */
-  mode: "demo",
+  mode: "live",
 
   /**
    * Feature Flags

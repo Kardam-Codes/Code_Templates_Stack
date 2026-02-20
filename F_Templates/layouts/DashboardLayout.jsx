@@ -17,8 +17,9 @@
  */
 
 import React from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { APP_CONFIG } from "../config/app.config"
+import useAuth from "../hooks/useAuth"
 
 /**
  * DashboardLayout receives "children"
@@ -31,6 +32,14 @@ import { APP_CONFIG } from "../config/app.config"
  * </DashboardLayout>
  */
 function DashboardLayout({ children }) {
+  const navigate = useNavigate()
+  const { logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    navigate("/login")
+  }
+
   return (
     <div style={styles.container}>
       
@@ -65,7 +74,7 @@ function DashboardLayout({ children }) {
         {/* Top Header */}
         <header style={styles.header}>
           <span>Welcome</span>
-          <button style={styles.logoutButton}>
+          <button style={styles.logoutButton} onClick={handleLogout}>
             Logout
           </button>
         </header>

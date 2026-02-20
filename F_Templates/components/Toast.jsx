@@ -12,7 +12,7 @@
  */
 
 import React, { createContext, useContext, useState } from "react"
-import { useTheme } from "./theme/ThemeProvider"
+import { useTheme } from "../theme/ThemeProvider"
 
 const ToastContext = createContext()
 

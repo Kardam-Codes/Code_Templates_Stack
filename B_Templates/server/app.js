@@ -13,6 +13,7 @@
 import express from "express"
 import cors from "cors"
 import morgan from "morgan"
+import rateLimit from "express-rate-limit"
 
 import { ENV } from "../config/env.js"
 
@@ -25,6 +26,16 @@ import userRoutes from "../routes/user.routes.js"
 import { errorMiddleware } from "../middleware/error.middleware.js"
 
 const app = express()
+const authRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many auth requests, please try again later.",
+  },
+})
 
 /**
  * GLOBAL MIDDLEWARE
@@ -47,12 +58,15 @@ if (ENV.NODE_ENV === "development") {
 
 // Health check
 app.use("/api/health", healthRoutes)
+app.use("/api/v1/health", healthRoutes)
 
 // Auth routes
-app.use("/api/auth", authRoutes)
+app.use("/api/auth", authRateLimiter, authRoutes)
+app.use("/api/v1/auth", authRateLimiter, authRoutes)
 
 // User routes
 app.use("/api/users", userRoutes)
+app.use("/api/v1/users", userRoutes)
 
 /**
  * GLOBAL ERROR HANDLER

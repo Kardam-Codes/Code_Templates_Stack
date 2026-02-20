@@ -12,7 +12,7 @@
 
 import React from "react"
 import { Link } from "react-router-dom"
-import { useTheme } from "./theme/ThemeProvider"
+import { useTheme } from "../theme/ThemeProvider"
 
 function NotFound() {
   const { theme } = useTheme()

@@ -11,7 +11,7 @@
  */
 
 import React from "react"
-import { useTheme } from "./theme/ThemeProvider"
+import { useTheme } from "../theme/ThemeProvider"
 
 function Loader({ fullScreen = false }) {
   const { theme } = useTheme()

@@ -14,46 +14,50 @@
  * - Only data logic
  */
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { api } from "../services/api"
 
-export function useFetch(endpoint, options = {}) {
+export default function useFetch(endpoint, options) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await api.get(endpoint, options)
+
+      if (response.success) {
+        // Keep whole response so pages can read data + pagination consistently.
+        setData(response)
+      } else {
+        setError(response.message || "Failed to fetch data")
+      }
+    } catch (err) {
+      setError("Failed to fetch data")
+    } finally {
+      setLoading(false)
+    }
+  }, [endpoint, refreshKey, options])
 
   useEffect(() => {
     let isMounted = true
 
-    async function fetchData() {
-      try {
-        setLoading(true)
-        const response = await api.get(endpoint)
-
-        if (isMounted) {
-          if (response.success) {
-            setData(response.data)
-          } else {
-            setError(response.message)
-          }
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError("Failed to fetch data")
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false)
-        }
-      }
+    async function run() {
+      if (!isMounted) return
+      await fetchData()
     }
 
-    fetchData()
+    run()
 
     return () => {
       isMounted = false
     }
-  }, [endpoint])
+  }, [fetchData])
 
-  return { data, loading, error }
+  const refetch = () => setRefreshKey((prev) => prev + 1)
+
+  return { data, loading, error, refetch }
 }

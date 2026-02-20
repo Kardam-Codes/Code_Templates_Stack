@@ -31,9 +31,9 @@ export const UserController = {
    */
   async getAll(req, res, next) {
     try {
-      const { page, limit } = req.query
+      const { page, limit, name, email } = req.query
 
-      const result = await UserService.getAll({ page, limit })
+      const result = await UserService.getAll({ page, limit, name, email })
 
       return res.status(200).json({
         success: true,

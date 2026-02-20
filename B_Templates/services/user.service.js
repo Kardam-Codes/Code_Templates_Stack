@@ -70,18 +70,60 @@ export const UserService = {
     return result.rows[0]
   },
 
-  async getAll({ page = 1, limit = 10 }) {
-    page = Number(page)
-    limit = Number(limit)
+  async getAll({ page = 1, limit = 10, name, email }) {
+    const parsedPage = Number.parseInt(page, 10)
+    const parsedLimit = Number.parseInt(limit, 10)
+
+    page = Number.isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage
+    limit = Number.isNaN(parsedLimit) || parsedLimit < 1 ? 10 : parsedLimit
+    limit = Math.min(limit, 100)
 
     const offset = (page - 1) * limit
 
-    const usersResult = await query(UserModel.getAllPaginated, [
-      limit,
-      offset,
-    ])
+    const whereParts = []
+    const whereParams = []
 
-    const countResult = await query(UserModel.countAll)
+    const sanitizedName = sanitizeString(name)
+    if (sanitizedName) {
+      whereParams.push(`%${sanitizedName}%`)
+      whereParts.push(`name ILIKE $${whereParams.length}`)
+    }
+
+    const sanitizedEmail = sanitizeString(email)
+    if (sanitizedEmail) {
+      whereParams.push(`%${sanitizedEmail}%`)
+      whereParts.push(`email ILIKE $${whereParams.length}`)
+    }
+
+    let usersResult
+    let countResult
+
+    if (whereParts.length === 0) {
+      usersResult = await query(UserModel.getAllPaginated, [limit, offset])
+      countResult = await query(UserModel.countAll)
+    } else {
+      const whereClause = `WHERE ${whereParts.join(" AND ")}`
+
+      usersResult = await query(
+        `
+          SELECT id, name, email, is_active, created_at, updated_at
+          FROM users
+          ${whereClause}
+          ORDER BY created_at DESC
+          LIMIT $${whereParams.length + 1} OFFSET $${whereParams.length + 2};
+        `,
+        [...whereParams, limit, offset]
+      )
+
+      countResult = await query(
+        `
+          SELECT COUNT(*)
+          FROM users
+          ${whereClause};
+        `,
+        whereParams
+      )
+    }
 
     const total = Number(countResult.rows[0].count)
 

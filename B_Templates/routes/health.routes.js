@@ -12,13 +12,25 @@
  */
 
 import express from "express"
+import { query } from "../database/db.js"
 
 const router = express.Router()
 
-router.get("/", (req, res) => {
-  res.status(200).json({
-    success: true,
-    status: "OK",
+router.get("/", async (req, res) => {
+  let database = "up"
+
+  try {
+    await query("SELECT 1")
+  } catch (error) {
+    database = "down"
+  }
+
+  const isHealthy = database === "up"
+
+  res.status(isHealthy ? 200 : 503).json({
+    success: isHealthy,
+    status: isHealthy ? "OK" : "DEGRADED",
+    database,
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
   })

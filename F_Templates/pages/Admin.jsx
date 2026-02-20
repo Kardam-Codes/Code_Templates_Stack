@@ -9,48 +9,97 @@
  * - Display administrative data
  * - Use same reusable components
  */
-import useFetch from "../hooks/useFetch";
-import Table from "../components/Table";
-import api from "../services/api";
+import { useMemo, useState } from "react"
+import useFetch from "../hooks/useFetch"
+import SmartTable from "../components/SmartTable"
+import Loader from "../components/Loader"
+import EmptyState from "../components/EmptyState"
 
 const Admin = () => {
-  const { data: users, loading, error, refetch } =
-    useFetch("/users");
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
 
-  const handleDelete = async (id) => {
-    await api.delete(`/users/${id}`);
-    refetch();
-  };
+  // Backend currently exposes admin-manageable user listing at /users.
+  const endpoint = useMemo(() => `/users?page=${page}&limit=${limit}`, [page, limit])
+  const { data, loading, error } = useFetch(endpoint)
 
-  if (loading) return <p className="loading">Loading...</p>;
-  if (error) return <p className="loading">{error}</p>;
+  const users = data?.data || []
+  const pagination = data?.pagination || { page, limit, totalPages: 1, total: 0 }
+
+  if (loading) return <Loader />
+  if (error) return <EmptyState message={error} />
 
   return (
     <div className="admin-container">
       <h1>Admin Panel</h1>
 
-      {/* Stats Card */}
       <div className="card">
         <h2>Total Users</h2>
-        <p>{users.length}</p>
+        <p>{pagination.total ?? users.length}</p>
       </div>
 
-      {/* Table Section */}
       <div className="table-section">
         <h2>User Management</h2>
 
-        <Table
-          columns={[
-            { header: "ID", accessor: "id" },
-            { header: "Name", accessor: "name" },
-            { header: "Email", accessor: "email" }
-          ]}
-          data={users}
-          onDelete={handleDelete}
-        />
+        {users.length === 0 ? (
+          <EmptyState message="No users found." />
+        ) : (
+          <SmartTable
+            columns={[
+              { label: "ID", key: "id" },
+              { label: "Name", key: "name" },
+              { label: "Email", key: "email" },
+            ]}
+            data={users}
+          />
+        )}
+
+        <div
+          style={{
+            marginTop: "20px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <button
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              disabled={pagination.page === 1}
+            >
+              Previous
+            </button>
+
+            <span style={{ margin: "0 10px" }}>
+              Page {pagination.page} of {pagination.totalPages || 1}
+            </span>
+
+            <button
+              onClick={() => setPage((prev) => prev + 1)}
+              disabled={pagination.page >= (pagination.totalPages || 1)}
+            >
+              Next
+            </button>
+          </div>
+
+          <div>
+            <label>Rows per page: </label>
+            <select
+              value={limit}
+              onChange={(e) => {
+                setPage(1)
+                setLimit(Number(e.target.value))
+              }}
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Admin;
+export default Admin

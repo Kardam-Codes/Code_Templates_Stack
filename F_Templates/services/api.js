@@ -3,135 +3,117 @@
  * OWNER: Kardam
  *
  * PURPOSE:
- * This file acts as a central API client.
- * Instead of calling fetch() everywhere in the app,
- * we call functions from here.
- *
- * WHY THIS EXISTS:
- * - Prevent duplicate fetch logic
- * - Support demo mode easily
- * - Centralize error handling
- * - Make backend switching easy
- *
- * IMPORTANT RULES:
- * - No UI logic here
- * - No business logic here
- * - Only request handling
+ * Central API client for all HTTP requests.
  */
 
-import { APP_CONFIG } from "../config/app.config"
+import { APP_CONFIG } from "../config/app.config.js"
 
-/**
- * Base URL of backend server
- * In real hackathon, change this once here.
- */
 const BASE_URL = "http://localhost:5000/api"
+const TOKEN_KEY = "token"
+const USER_KEY = "user"
 
-/**
- * Helper function to simulate demo data.
- * This runs when APP_CONFIG.mode === "demo"
- */
-function mockResponse(endpoint, options) {
-  console.log("⚡ Demo Mode Active → Returning Mock Data")
-
-  // You can expand this later
-  // Keep it simple for now
+function mockResponse() {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
         success: true,
         data: [],
-        message: "Demo response"
+        message: "Demo response",
       })
-    }, 500)
+    }, 300)
   })
 }
 
-/**
- * Core request function
- * All GET/POST/PUT/DELETE calls use this internally
- */
+function getAuthHeaders() {
+  const token = localStorage.getItem(TOKEN_KEY)
+
+  if (!token) {
+    return {}
+  }
+
+  return {
+    Authorization: `Bearer ${token}`,
+  }
+}
+
+function normalizeResponse(payload = {}, fallbackMessage = "Request completed") {
+  return {
+    success: typeof payload.success === "boolean" ? payload.success : true,
+    data: payload.data ?? null,
+    message: payload.message || fallbackMessage,
+    pagination: payload.pagination,
+  }
+}
+
 async function request(endpoint, options = {}) {
   try {
-    /**
-     * If app is in demo mode,
-     * skip real backend and return mock data
-     */
     if (APP_CONFIG.mode === "demo") {
-      return await mockResponse(endpoint, options)
+      return await mockResponse()
     }
 
-    /**
-     * Build full URL
-     */
     const url = `${BASE_URL}${endpoint}`
+    const headers = {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+      ...(options.headers || {}),
+    }
 
-    /**
-     * Default fetch configuration
-     */
-    const config = {
-      headers: {
-        "Content-Type": "application/json",
-      },
+    const response = await fetch(url, {
       ...options,
+      headers,
+    })
+
+    let payload = {}
+    try {
+      payload = await response.json()
+    } catch {
+      payload = {}
     }
 
-    /**
-     * Make real network request
-     */
-    const response = await fetch(url, config)
+    if (response.status === 401) {
+      localStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem(USER_KEY)
+    }
 
-    /**
-     * Convert response to JSON
-     */
-    const data = await response.json()
-
-    /**
-     * Handle HTTP errors
-     */
     if (!response.ok) {
-      throw new Error(data.message || "Something went wrong")
+      return {
+        success: false,
+        data: payload.data ?? null,
+        message: payload.message || "Request failed",
+      }
     }
 
-    return data
-
+    return normalizeResponse(payload)
   } catch (error) {
-    console.error("API Error:", error.message)
-
-    /**
-     * Standard error structure
-     */
     return {
       success: false,
-      message: error.message,
+      data: null,
+      message: error.message || "Network error",
     }
   }
 }
 
-/**
- * Public API Methods
- * These are what the rest of the app uses.
- */
 export const api = {
-  get: (endpoint) =>
-    request(endpoint, {
-      method: "GET",
-    }),
-
-  post: (endpoint, body) =>
-    request(endpoint, {
+  get(endpoint, options = {}) {
+    return request(endpoint, { method: "GET", ...options })
+  },
+  post(endpoint, body, options = {}) {
+    return request(endpoint, {
       method: "POST",
       body: JSON.stringify(body),
-    }),
-
-  put: (endpoint, body) =>
-    request(endpoint, {
+      ...options,
+    })
+  },
+  put(endpoint, body, options = {}) {
+    return request(endpoint, {
       method: "PUT",
       body: JSON.stringify(body),
-    }),
-
-  delete: (endpoint) =>
-    request(endpoint, {
-      method: "DELETE",
-    }),
+      ...options,
+    })
+  },
+  delete(endpoint, options = {}) {
+    return request(endpoint, { method: "DELETE", ...options })
+  },
 }
+
+export default api
